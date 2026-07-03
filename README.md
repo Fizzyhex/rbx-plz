@@ -8,8 +8,8 @@ Copy the raw contents of [plz.luau](./plz.luau), and store it in a module somewh
 
 ## examples
 
-- `clicker.client.luau` - Renders buttons that display a new pulsing bar every time you click them
-- `cube_wave.client.luau` - Creates an array of parts that move in a sin wave, flashing with alternating highlights. Change the attributes to tweak at runtime.
+- [`clicker.client.luau`](./examples/clicker.client.luau) - Renders buttons that display a new pulsing bar every time you click them
+- [`cube_wave.client.luau`](./examples/cube_wave.client.luau) - Creates an array of parts that move in a sin wave, flashing with alternating highlights. Change the attributes to tweak at runtime.
 
 ## 💖prior art
 
