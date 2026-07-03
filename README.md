@@ -17,3 +17,4 @@ Copy the raw contents of [plz.luau](./plz.luau), and store them in a module some
 - [Pangui](https://pangui.io)
 - [Dear ImGui](https://github.com/ocornut/imgui)
 - [Native Legacy](https://github.com/Builder-Pals/native-legacy)
+- [jecs](https://github.com/Ukendio/jecs)
