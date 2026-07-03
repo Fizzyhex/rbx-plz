@@ -4,7 +4,7 @@ My UI library that's as simple as possible, plz.
 
 ## installation
 
-Copy the raw contents of [plz.luau](./plz.luau) and store them somewhere in your project.
+Copy the raw contents of [plz.luau](./plz.luau), and store it in a module somewhere.
 
 ## examples
 
