@@ -5,7 +5,8 @@
 ]=]
 local plz = {}
 
-local RunService = game:GetService("RunService")
+const RunService = game:GetService("RunService")
+const STEP_SIGNAL = RunService:IsServer() and RunService.Heartbeat or RunService.RenderStepped
 
 local evy = {}
 
@@ -122,7 +123,7 @@ export type Pen = {
 	node: <T>(self: Pen, allocation: Allocation<T>) -> Node<T>
 }
 
-export type Node<T=unknown, A...=...unknown> = T & {
+export type Node<T=Instance, A...=...unknown> = T & {
 	_allocation: Allocation<any>,
 } & {
 	[EventKey<A...>]: (A...) -> ()
@@ -323,10 +324,12 @@ function plz.event<T...>(node: Node, key: RBXScriptSignal<T...>, fn: (T...) -> (
 	node[s] = fn
 end
 
-function plz.loop(pen: Pen, renderer)
-	local connection = RunService.RenderStepped:Connect(function()
-		renderer()
-		pen:render()
+function plz.loop(pen: Pen, renderer: (delta_time: number, updates: number) -> (), loop)
+	local last_updates = 0
+
+	local connection = STEP_SIGNAL:Connect(function(delta_time)
+		renderer(delta_time, last_updates)
+		last_updates = pen:render()
 	end)
 	
 	return function()
