@@ -5,6 +5,8 @@
 ]=]
 local plz = {}
 
+local RunService = game:GetService("RunService")
+
 local evy = {}
 
 export type EvyContext = {
@@ -115,13 +117,18 @@ type Unpack<T> = index<T, "_T">
 
 type EventKey<T...> = { _is_event_key: true, _listener: (T...) -> () }
 
+export type Pen = {
+	render: (self: Pen) -> number,
+	node: <T>(self: Pen, allocation: Allocation<T>) -> Node<T>
+}
+
 export type Node<T=unknown, A...=...unknown> = T & {
 	_allocation: Allocation<any>,
 } & {
 	[EventKey<A...>]: (A...) -> ()
 }
 
-export type Pen = {
+export type PenCtx = {
     last_changes: { [number]: { [string]: true } },
 	queue: { Node },
 	dirty: { [Instance & {}]: number },
@@ -180,7 +187,7 @@ local function get_defaults_entry(allocation: Allocation<any> | number)
 	return match
 end
 
-function pen.node<T>(ctx: Pen, allocation: Allocation<T>, hook): Node<T>
+function pen.node<T>(ctx: PenCtx, allocation: Allocation<T>, hook): Node<T>
 	local element = table.remove(ctx.free_elements) or {} :: Node<T>
  	element._allocation = allocation
 	table.insert(ctx.queue, element)
@@ -188,7 +195,7 @@ function pen.node<T>(ctx: Pen, allocation: Allocation<T>, hook): Node<T>
 	return element
 end
 
-function pen.render(ctx: Pen)
+function pen.render(ctx: PenCtx)
 	local updates = 0
 	local updated = {}
 
@@ -196,7 +203,7 @@ function pen.render(ctx: Pen)
 		local id = get_id(element._allocation, offset)
 		local instance = get_instance(element._allocation, offset)
 		local defaults = get_defaults_entry(element._allocation)
-        local last = ctx.last_changes[id] or {} :: keyof<index<Pen, "last_changes">>
+        local last = ctx.last_changes[id] or {} :: keyof<index<PenCtx, "last_changes">>
 
 		for key, value in element :: Node<any> do
 			if key == "_allocation" then
@@ -290,16 +297,16 @@ assert(allocation_from_id(CHUNK_SIZE * 2) == CHUNK_SIZE * 2)
 assert(allocation_from_id((CHUNK_SIZE * 2) + math.floor(CHUNK_SIZE / 2)) == CHUNK_SIZE * 2)
 
 function plz.pen()
-    local ctx: Pen = {
+    local ctx: PenCtx = {
         last_changes = {},
         queue = {},
 		dirty = {},
 		references = {},
-		free_elements = table.create(500) :: index<Pen, "free_elements">,
+		free_elements = table.create(500) :: index<PenCtx, "free_elements">,
 		event_context = evy.context(),
     }
 
-    return setmetatable(ctx, pen)
+    return setmetatable(ctx, pen) :: Pen
 end
 
 --[=[
@@ -314,6 +321,17 @@ end
 function plz.event<T...>(node: Node, key: RBXScriptSignal<T...>, fn: (T...) -> ())
 	local s = if typeof(key) == "string" then key else tostring(key):sub(8)
 	node[s] = fn
+end
+
+function plz.loop(pen: Pen, renderer)
+	local connection = RunService.RenderStepped:Connect(function()
+		renderer()
+		pen:render()
+	end)
+	
+	return function()
+		connection:Disconnect()
+	end
 end
 
 return plz
